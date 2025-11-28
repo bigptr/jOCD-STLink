@@ -1,0 +1,12 @@
+[
+  {
+    "name": "java.lang.foreign.MemorySegment",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "java.lang.foreign.Arena",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]

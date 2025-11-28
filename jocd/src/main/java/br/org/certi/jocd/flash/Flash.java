@@ -55,7 +55,7 @@ public class Flash {
       0x000000B6L, 0xEDB88320L, 0x00000044L};
 
   FlashAlgo flashAlgo;
-  Target target;
+  protected Target target;
 
   boolean flashAlgoDebug = false;
 

@@ -27,13 +27,13 @@ public class PageInfo {
   public static final double DEFAULT_CHIP_ERASE_WEIGHT = 0.174;
 
   // Start address of this page in milliseconds
-  long baseAddress;
+  public long baseAddress;
 
   // Time it takes to erase a page in milliseconds
-  double eraseWeight;
+  public double eraseWeight;
 
   // Time it takes to program a page (Not including data transfer time)
-  double programWeight;
+  public double programWeight;
 
   // Size of page.
   public int size;

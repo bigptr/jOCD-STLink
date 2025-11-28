@@ -102,12 +102,13 @@ public class DapAccessCmsisDap {
     // For each interface connected try to create a DAP
     // link and add to our allDAPLinks.
     for (ConnectionInterface iface : allDevices) {
-      // Get only CMSIS-DAP devices.
+      // Get only CMSIS-DAP or ST-Link devices.
       if (iface.getProductName() == null) {
         LOGGER.log(Level.WARNING, "Null product name on interface " + iface.getDeviceName());
         continue;
       }
-      if (!iface.getProductName().contains("CMSIS-DAP")) {
+      String productName = iface.getProductName();
+      if (!productName.contains("CMSIS-DAP") && !productName.contains("STLink") && !productName.contains("ST-Link")) {
         continue;
       }
 

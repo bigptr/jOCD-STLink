@@ -19,6 +19,7 @@ import br.org.certi.jocd.core.CoreSightTarget;
 import br.org.certi.jocd.core.Target;
 import br.org.certi.jocd.dapaccess.DapAccessCmsisDap;
 import br.org.certi.jocd.target.nrf51822.Nrf51;
+import br.org.certi.jocd.target.stm32f7.Stm32F767;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +63,7 @@ public class TargetFactory {
     nrf52,       // Not implemented.
     stm32f103rc, // Not implemented.
     stm32f051,   // Not implemented.
+    stm32f767,
     maxwsnenv,   // Not implemented.
     max32600mbed,// Not implemented.
     w7500,       // Not implemented.
@@ -84,6 +86,10 @@ public class TargetFactory {
         return target;
       case nrf51:
         target = new Nrf51();
+        target.setup(link);
+        return target;
+      case stm32f767:
+        target = new Stm32F767();
         target.setup(link);
         return target;
       default:

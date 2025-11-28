@@ -1,0 +1,97 @@
+/*
+ * Copyright 2018 Fundação CERTI
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the license for the specific language governing permissions and
+ * limitations under the license.
+ */
+
+plugins {
+    id 'application'
+    id 'java'
+    id 'org.graalvm.buildtools.native' version '0.10.4'
+}
+
+mainClassName = 'br.org.certi.stlinkflashtool.StLinkFlashTool'
+
+version ='1.1.0'
+sourceCompatibility = '23'
+targetCompatibility = '23'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': mainClassName
+    )
+  }
+}
+
+ext.dpProjectPath = projectDir
+task buildAll() {
+    finalizedBy build
+    doLast {
+        // All dependencies (jOCD will be resolved by jocd-conn-javadoesusb).
+        def dp = [ '../../../jocd-conn-javadoesusb' ]
+        dp.each {
+            ext.dpProjectPath = "${it}"
+            exec {
+                workingDir dpProjectPath
+                if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+                    // On windows:
+                    commandLine 'cmd', '/c', 'gradlew.bat buildAll'
+                } else {
+                    // On linux:
+                    commandLine 'bash', '-c', './gradlew buildAll'
+                }
+            }
+        }
+        println "\n\nBuilding $project.name"
+    }
+}
+
+dependencies {
+    implementation 'br.org.certi:jocd-conn-javadoesusb:1.1.0'
+}
+
+// GraalVM Native Image configuration
+graalvmNative {
+    binaries {
+        main {
+            imageName = 'stlink-flash'
+            mainClass = 'br.org.certi.stlinkflashtool.StLinkFlashTool'
+            
+            buildArgs.addAll(
+                '--no-fallback',
+                '--enable-native-access=ALL-UNNAMED',
+                '-H:+ReportExceptionStackTraces',
+                '--initialize-at-build-time=org.slf4j',
+                '--initialize-at-run-time=net.codecrete.usb'
+            )
+            
+            // Enable verbose output during build
+            verbose = true
+        }
+    }
+    
+    toolchainDetection = false
+}
+
+task copyDependencies(type: Copy) {
+   from configurations.compileClasspath
+   into buildDir.toString() + "/libs"
+}
+
+build.finalizedBy(copyDependencies)

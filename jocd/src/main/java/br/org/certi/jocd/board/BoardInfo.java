@@ -99,6 +99,8 @@ public class BoardInfo {
       case "9900": return new BoardInfo("Microbit",                       TargetFactory.targetEnum.nrf51,        "l1_microbit.bin"        );
       case "C004": return new BoardInfo("tinyK20",                        TargetFactory.targetEnum.k20d50m,      "l1_k20d50m.bin"         );
       case "C006": return new BoardInfo("VBLUno51",                       TargetFactory.targetEnum.nrf51,        "l1_nrf51.bin"           );
+      // STM32 boards
+      case "0670": return new BoardInfo("NUCLEO-F767ZI",                  TargetFactory.targetEnum.stm32f767,    "l1_stm32f767.bin"       );
       default: return null;
     }
   }

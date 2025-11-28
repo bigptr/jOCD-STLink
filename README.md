@@ -20,16 +20,44 @@
 [![Coverity Scan](https://img.shields.io/coverity/scan/16003.svg)](https://scan.coverity.com/projects/fundacaocerti-jocd)
 [![Download](https://api.bintray.com/packages/fundacaocerti/jOCD/jOCD/images/download.svg) ](https://bintray.com/fundacaocerti/jOCD/jOCD/_latestVersion)
 
-jOCD is multiplatform Java port of the pyOCD (https://github.com/mbedmicro/pyOCD) project. This is a Java library for programming micro:bit board using CMSIS-DAP. Currently the following platforms are supported:
+jOCD is multiplatform Java port of the pyOCD (https://github.com/mbedmicro/pyOCD) project. This is a Java library for programming ARM Cortex-M microcontrollers using CMSIS-DAP. Currently the following platforms are supported:
 
 * Android (API >= 21 - Lollipop 5.0)
 * Linux (Ubuntu 18.04 LTS)
+* macOS (including Sequoia with JavaDoesUSB backend)
+* Windows
+
+## USB Backends
+
+jOCD supports multiple USB communication backends:
+
+* **jocd-conn-javadoesusb** - Modern FFM-based USB library (requires JDK 23+)
+  - Recommended for macOS Sequoia and modern platforms
+  - Uses Foreign Function & Memory API for native USB access
+  - Better compatibility with recent operating systems
+  
+* **jocd-conn-usb4java** - Legacy USB library based on libusb
+  - Works with older JDK versions
+  - May have compatibility issues on macOS Sequoia
+  
+* **jocd-conn-android** - Android-specific USB implementation
+  - For Android devices with USB OTG support
 
 This library is licensed under Apache V 2.0.
 
+## Supported Devices
+
+### Fully Implemented
+- **micro:bit board** (nRF51822)
+
+### Partial Support
+- **Generic Cortex-M** - Basic operations may work with any ARM Cortex-M device using CMSIS-DAP
+
+### Planned Support
+- **STM32 Family** - Listed but not yet implemented. See [STM32 Support TODO](docs/STM32_SUPPORT_TODO.md) for implementation plan and details.
+
 ## Instructions:
 
-For now the only device implemented is the micro:bit board.
 If you are running in an Android device, make sure your device supports USB OTG (https://en.wikipedia.org/wiki/USB_On-The-Go).
 
 ### Compiling Instructions
@@ -66,9 +94,36 @@ dependencies {
 }
 ```
 
-#### Compiling for Linux (usb4java)
+#### Compiling for Desktop (JavaDoesUSB - Recommended)
 
-To compile it for Linux, on the project root, run: 
+**Requirements:** JDK 23 or higher
+
+To compile with the modern JavaDoesUSB backend:
+```bash
+~/jOCD/jocd-conn-javadoesusb$ ./gradlew build publishToMavenLocal
+```
+
+This will compile "jocd-conn-javadoesusb" and its dependencies, generating:
+
+* jocd-conn-javadoesusb.jar
+* jocd.jar 
+* java-intelhex-parser.jar
+* java-does-usb.jar
+
+Now, you are ready to create your application using jocd and jocd-conn-javadoesusb as dependency:
+
+build.gradle:
+```groovy
+dependencies {
+    implementation 'br.org.certi:jocd-conn-javadoesusb:1.1.0'
+}
+```
+
+**Note:** JavaDoesUSB requires JDK 23+ and uses the Foreign Function & Memory (FFM) API. 
+
+#### Compiling for Linux (usb4java - Legacy)
+
+To compile it for Linux with the legacy usb4java backend, on the project root, run: 
 ```bash
 ~/jOCD/jOCD-conn-usb4java$ ./gradlew usb4java
 ```
@@ -113,6 +168,8 @@ pom.xml:
 </project>
 ```
 
+**Note:** usb4java may have compatibility issues on macOS Sequoia. Consider using jocd-conn-javadoesusb instead.
+
 ## Example applications:
 
 You can compile all dependencies from any of the following examples by running:
@@ -134,14 +191,86 @@ You need to run this only once, to setup your dependencies.
 <br />Description: Simple Android app to list all connected devices and program using a selected hex file. 
 <br />Instructions: This example doesn't use the compiled library and use the sources instead (remember to keep the folder sctructure or adjust your project sourceSets at your app build.gradle).
 
-### Example applications for Linux
+### Example applications for Desktop
 
-1. JocdUsb4JavaTestCli
+1. **StlinkFlashTool** (Recommended)
+<br />Path: examples/javadoesusb/StlinkFlashTool
+<br />Description: Simple Java CLI application using JavaDoesUSB backend to list all connected devices and program using a selected hex file.
+<br />Requirements: JDK 23 or higher
+<br />Instructions: 
+```bash
+cd examples/javadoesusb/StlinkFlashTool
+./gradlew buildAll
+java -cp "build/libs/*" br.org.certi.stlinkflashtool.MainClass --list
+```
+<br />See [README](examples/javadoesusb/StlinkFlashTool/README.md) for detailed usage.
+
+2. **JocdUsb4JavaTestCli** (Legacy)
 <br />Path: examples/usb4java/JocdUsb4JavaTestCli
-<br />Description: Simple Java cli application to list all connected devices and program using a selected hex file using jOCD API.
-<br />Instructions: To run this project you must first compile the library as [described in the compiling section above](#compiling-for-Windows,-Linux,-Mac-OS-X). 
+<br />Description: Simple Java CLI application using usb4java backend to list all connected devices and program using a selected hex file.
+<br />Instructions: To run this project you must first compile the library as [described in the compiling section above](#compiling-for-linux-usb4java---legacy). 
 
-1. JavaFlashToolTestCli
+3. **JavaFlashToolTestCli** (Legacy)
 <br />Path: examples/usb4java/JavaFlashToolTestCli
-<br />Description: Simple Java cli application to list all connected devices and program using a selected hex file. 
-<br />Instructions: This example doesn't use the compiled library and use the sources instead (remember to keep the folder sctructure or adjust your pom.xml).
+<br />Description: Simple Java CLI application to list all connected devices and program using a selected hex file. 
+<br />Instructions: This example doesn't use the compiled library and use the sources instead (remember to keep the folder structure or adjust your pom.xml).
+
+
+### Example STLink Flash Tool for MacOS Sequoia
+
+Requires JDK 23 or higher
+
+Instructions:
+```bash
+cd examples/javadoesusb/stlinkflashtool
+./gradlew buildAll
+java -cp "build/libs/*" br.org.certi.stlinkflashtool.StLinkFlashTool test.bin
+```
+
+#### Compiling Native Image with GraalVM
+
+The StlinkFlashTool example supports compiling to a native executable using GraalVM Native Image. This produces a standalone binary with faster startup time and lower memory footprint.
+
+**Requirements:**
+- GraalVM JDK 23 or higher (with native-image tool)
+- Set `GRAALVM_HOME` environment variable or have `native-image` in your PATH
+
+**Build the native executable:**
+```bash
+cd examples/javadoesusb/stlinkflashtool
+./gradlew nativeCompile
+```
+
+The native binary will be generated at `build/native/nativeCompile/stlink-flash`.
+
+**Run the native executable:**
+```bash
+./build/native/nativeCompile/stlink-flash --list
+
+
+ST-Link Flash Tool for STM32
+================================
+
+Searching for ST-Link devices...
+
+Found 1 ST-Link device(s):
+
+  [1] STM32 STLink
+      Serial: 0670FF3238504B304312121
+      VID:PID = 0483:374B
+Nov 28, 2025 4:26:00 PM br.org.certi.jocdconnjavadoesusb.stlink.JavaDoesUsbStLink open
+INFO: Opened ST-Link: interface=0, IN=1, OUT=1
+Nov 28, 2025 4:26:00 PM br.org.certi.jocd.stlink.StLink open
+INFO: ST-Link opened successfully. Version: V2, JTAG: 46
+      ST-Link V2, JTAG v46
+      Core ID: 0x410FC271
+
+
+To flash use
+./build/native/nativeCompile/stlink-flash test.bin
+
+
+```
+
+
+

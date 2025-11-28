@@ -28,4 +28,8 @@ public class Error extends Exception {
     super(message);
   }
 
+  public Error(String message, Throwable cause) {
+    super(message, cause);
+  }
+
 }
