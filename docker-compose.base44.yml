@@ -1,0 +1,12 @@
+services:
+  docs:
+    image: nginx:alpine
+    ports: ["3000:80"]
+    volumes:
+      - ./docs/javadoc:/usr/share/nginx/html:ro
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/index.html >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
